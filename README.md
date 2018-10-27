@@ -1,4 +1,3 @@
-# NomadBlacky's slides
+# Readable Code in Scala
 
-+ hoge
-+ foo
+Scala関西Summit2018での発表資料です。
