@@ -10,97 +10,163 @@
 
 + 門脇 拓巳 (かどわき たくみ)
 + 所属: 株式会社セプテーニ・オリジナル
-+ GitHub: NomadBlacky
-+ Twitter: @blac_k_ey
++ GitHub: [NomadBlacky](https://github.com/NomadBlacky)
++ Twitter: [@blac_k_ey](https://twitter.com/blac_k_ey)
 
 ---
 
-## 本発表について
+# 謝辞
 
-+ 読みにくいコードをリファクタリングして得られた知見
-+ 読みやすいコードを書くためのTips
++++
 
-などをお話します。
+資料間に合いませんでした
 
-「ある程度Scalaに慣れたけど、Scalaらしく書けているのかな…?」  
-…というような初心者の方を対象としています。
++++
+
+
 
 ---
 
-## ストーリー
-
-※以下はフィクションです
+## 「読みやすい」コードとはなんだろう?
 
 +++
 
-PO「突然だけど、来月からこのプロジェクトの開発に加わって欲しいんだ。」
+「読みにくい」コードから考える
 
-入社から3ヶ月…  
-会社での仕事も慣れてきた自分に降りかかってきたのはPOからのある一言だった。
-
-+++
-
-PO「媒体のAPIアップデートが控えていて、そろそろ対応しなきゃまずいんだ。」
-
-PO「ただ、リソースが足りていなくて…君の力が必要なんだ！頼むよ！」
-
-人間、頼られると嫌な気持ちはしないものだ。  
-（まっ、やってやりますか）と心に思い、  
-早速そのプロジェクトのリポジトリをクローンしてみる。
++ 
++ 
 
 +++
 
-`scalaVersion := "2.11.7"`
+「読みやすい」コード
 
-`addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.3")`
-
-（まぁ、ちょっと古いけどこんなものだよね…）
-
-+++
-
-（改修する箇所のコード読んでみるか…）
-
-安心(?)したのもつかの間、目に飛び込んできたのは度肝を抜くコードだった…
++ 
++ 
 
 +++
 
-！?
+Scalaに限らず、読みやすいコードを書くためにできること
+
++ 
+
+これらの要素はScalaも同様に役立ちます。
+
++++
+
+今回は「Scala関西Summit」ということなので…
+
+Scalaの言語機能にフォーカスして  
+Scalaらしく、「読みやすい」コードを書けることを目指していきましょう。
 
 ---
 
-### このコード読めますか?
+## パターンマッチ編
 
 +++
+
+Before
 
 ```scala
-class Hoge {
-  def foo(): Bar = {
-    for {
-      a <- func1
-      b <- func2
-    } yield Bar(a, b)
+val b1: Boolean = true
+val b2: Boolean = false
+if (b1) {
+  if (b2) {
+    funcA()
+  } else {
+    funcB()
+  }
+} else {
+  if (b2) {
+    funcC()
+  } else {
+    funcD()
   }
 }
 ```
 
 +++
 
+After
+
+```scala
+val b1: Boolean = true
+val b2: Boolean = false
+(b1, b2) match {
+  case (true, true)   => funcA()
+  case (true, false)  => funcB()
+  case (false, true)  => funcC()
+  case (false, false) => funcD()
+}
+```
+
+### 色々なところでパターンマッチ
+
++++
+
+```scala
+```
+
+値の初期化
+
++++
+
+```scala
+```
+
+PartialFunction (部分関数)
 
 ---
 
-## リファクタリングしてみよう
+## コレクション操作編
 
 ---
 
-## そのほか読みやすいコードを書くためのTips
+## for式編
+
++++
+
+```scala
+```
+
+for式のおさらい
+
+---
+
+## Future編
+
+---
+
+## コードスタイル編
+
++++
+
+[Effective Scala](http://twitter.github.io/effectivescala/index-ja.html#書式)
+
+> スタイルに本質的な良し悪しはないし、個人的な好みはほぼ人によって異なる。
+> しかし、同じ整形ルールを一貫して適用すれば、ほとんどの場合で可読性が高まる。
+
++++
+
+
+
++++
+
+宣伝
+
+sbtプロジェクトにscalafmtをコマンド一発で導入する
+
+[septeni-original/scalafmt-config](https://github.com/septeni-original/scalafmt-config)
+
+`curl -L https://git.io/vdiNA | bash`
 
 ---
 
 ## まとめ
 
-+ 読みにくいコードの多くは「大きな」コード
-  + 小さな関数に処理を切りだそう
-  + ネストが深くならないように気をつけよう
-+ for式を使いこなそう
-  + ジェネレータを関数に切り出すことで処理の流れを記述できる
-+ 目的の処理が実現できるAPIが提供されてないか探してみよう
+「読みやすい」Scalaコードを書くために
+
++ 関数を小さく保つ・書式を揃える、といった要素はScalaでも同様に役立つ
++ Scalaの言語機能を理解しよう
++ 適切なAPIを探そう、使おう
+
+Scalaで実装する際の助けになれば幸いです
