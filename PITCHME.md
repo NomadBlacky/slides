@@ -279,12 +279,34 @@ sbtプロジェクトにscalafmtをコマンド一発で導入する
 
 ---
 
+## 最後に
+
++++
+
+今回紹介したコードは以下に置いてあります。
+
+[NomadBlacky/scala_samples](https://github.com/NomadBlacky/scala_samples)
+
+今回の内容以外にも、Scala関する様々なサンプルコードがあります。  
+Scala学習の手助けとなれば幸いです。
+
++++
+
+![scala-book](images/zissen-scala.jpg)
+
+「実践Scala入門」発売中!  
+レビューを少しお手伝いさせていただきました🙇
+
+8章、9章はよりScalaらしく書くための手助けになります。
+
+---
+
 ## まとめ
 
 「読みやすい」Scalaコードを書くために
 
 + 関数を小さく保つ・書式を揃える、といった要素はScalaでも同様に役立つ
-+ Scalaの言語機能を理解しよう
++ Scalaの言語機能を理解しよう、使ってみよう
 + 適切なAPIを探そう、使おう
 
-Scalaで実装する際の助けになれば幸いです
+Scalaで実装する際の助けになれば幸いです🙇
