@@ -93,6 +93,26 @@ def extractUserNameWithTop10Chars(users: List[User]): List[String] = ???
 +++
 
 ```scala
+val userList = List(
+  User(Some("user1"),                      isActive = true),
+  User(None,                               isActive = true),
+  User(Some("user3"),                      isActive = false),
+  User(Some("tooooooooo long name user4"), isActive = true),
+  User(Some("tooooooooo long name user5"), isActive = false),
+  User(None,                               isActive = false),
+  User(Some("user7"),                      isActive = true)
+)
+
+val expect = List("user1", "tooooooooo", "user7")
+
+extractUserNameWithTop10Chars(userList) shouldBe expect
+```
+
+期待する動作
+
++++
+
+```scala
 def extractUserNameWithTop10Chars(users: List[User]): List[String] = {
   users
     .withFilter(u => u.isActive)
