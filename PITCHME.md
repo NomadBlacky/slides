@@ -58,6 +58,7 @@ Scalaに限らず、読みやすいコードを書くためにできること
 + ネストを深くしない
 + ドキュメントを書く
 + 副作用を起こすところを局所化する
++ ...
 
 これらの要素はScalaも同様に役立ちます。
 
@@ -65,7 +66,10 @@ Scalaに限らず、読みやすいコードを書くためにできること
 
 今回は「Scala関西Summit」ということなので…
 
-Scalaの言語機能にフォーカスして  
++ 適切な機能・APIを使って実装されている
++ シンプル
+
+特にこの2つに対し、Scalaの言語機能を有効に使うことで、  
 Scalaらしく、「読みやすい」コードを書けることを目指していきましょう。
 
 ---
@@ -74,60 +78,164 @@ Scalaらしく、「読みやすい」コードを書けることを目指して
 
 +++
 
-Before
+まず、以下の条件を満たす関数を実装することを考えます。
 
 ```scala
-val b1: Boolean = true
-val b2: Boolean = false
-if (b1) {
-  if (b2) {
-    funcA()
-  } else {
-    funcB()
-  }
-} else {
-  if (b2) {
-    funcC()
-  } else {
-    funcD()
+case class User(name: Option[String], isActive: Boolean)
+def extractUserNameWithTop10Chars(users: List[User]): List[String] = ???
+```
+
++ List[User]クラスに対して
++ isActiveがtrueのものだけを抜き出し
++ 名前が10文字以上の場合は最初の10文字だけを抜き出し
++ List[String]を返す
+
++++
+
+```scala
+def extractUserNameWithTop10Chars(users: List[User]): List[String] = {
+  users
+    .withFilter(u => u.isActive)
+    .withFilter(u => u.name.isDefined)
+    .map { user =>
+      if (10 <= user.name.get.length) {
+        user.name.get.take(10)
+      } else {
+        user.name.get
+      }
+    }
+}
+```
+
+素直に実装してみる
+
++++
+
+```scala
+def extractUserNameWithTop10Chars02(users: List[User]): List[String] = {
+  users
+    .withFilter(u => u.isActive)
+    .withFilter(u => u.name.isDefined)
+    .map { user =>
+      user match {
+        case User(Some(name), _) if 10 <= name.length => name.take(10)
+        case User(Some(name), _)                      => name
+      }
+    }
+}
+```
+
+パターンマッチを使う
+
++++
+
+```scala
+def extractUserNameWithTop10Chars03(users: List[User]): List[String] = {
+  users.flatMap { user =>
+    user match {
+      case User(Some(name), true) if 10 <= name.length => Some(name.take(10))
+      case User(Some(name), true)                      => Some(name)
+      case _                                           => None
+    }
   }
 }
 ```
 
+もっとパターンマッチを使う
+
 +++
 
-After
+```scala
+def extractUserNameWithTop10Chars04(users: List[User]): List[String] =
+  users.collect {
+    case User(Some(name), true) if 10 <= name.length => name.take(10)
+    case User(Some(name), true)                      => name
+  }
+```
+
+collectを使う
+
++++
 
 ```scala
-val b1: Boolean = true
-val b2: Boolean = false
-(b1, b2) match {
-  case (true, true)   => funcA()
-  case (true, false)  => funcB()
-  case (false, true)  => funcC()
-  case (false, false) => funcD()
+final override def collect[B, That](pf: PartialFunction[A, B])
+  (implicit bf: CanBuildFrom[List[A], B, That]): That
+```
+
+ところで、PartialFunctionって何でしょうか?
+
++++
+
+```scala
+trait PartialFunction[-A, +B] extends (A => B)
+```
+
++ 「部分関数」とも言われる
++ 特定の引数に対してのみ結果を返す関数。
++ 引数により値を返さない場合がある。
+
++++
+
+```scala
+val pf: PartialFunction[Int, String] = {
+  case 0 => "zero"
+  case i if i % 2 == 0 => "even"
 }
+
+// isDefinedAt ... 値をを返すか調べる
+pf.isDefinedAt(0) shouldBe true
+pf.isDefinedAt(1) shouldBe false
+pf.isDefinedAt(2) shouldBe true
+
+// lift ... 結果をOptionに包む
+pf.lift(0) shouldBe Some("zero")
+pf.lift(1) shouldBe None
+pf.lift(2) shouldBe Some("even")
 ```
 
-### 色々なところでパターンマッチ
++++
+
+### 標準ライブラリにおけるPartialFunctionの利用例
 
 +++
 
 ```scala
+// find と map
+def isActiveUser(username: String): Option[Boolean] =
+  userList.find(_.name.contains(username)).map(_.isActive)
+
+// collectFirst
+def isActiveUser2(username: String): Option[Boolean] =
+  userList.collectFirst {
+    case User(Some(name), isActive) if name == username => isActive
+  }
 ```
 
-値の初期化
+`TraversableOnce#collectFirst`
 
 +++
 
 ```scala
+def storeUser(user: User): Try[Unit] = Try {
+  if (user.isActive) println("stored") else throw new IOException
+}
+def storeError(t: Throwable): Try[Unit] = Try(throw new IllegalStateException)
+
+def tryStoringUser(user: User): Try[Unit] = {
+  storeUser(user) match {
+    case Success(_) => Success(())
+    case Failure(e: IOException) => storeError(e)
+    case Failure(e) => Failure(e)
+  }
+}
+
+def tryStoringUser2(user: User): Try[Unit] =
+  storeUser(user).recoverWith {
+    case e: IOException => storeError(e)
+  }
 ```
 
-PartialFunction (部分関数)
-
----
-
-## コレクション操作編
+`Try#recoverWith`
 
 ---
 
