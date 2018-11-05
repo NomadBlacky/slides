@@ -231,7 +231,8 @@ def isActiveUser2(username: String): Option[Boolean] =
   }
 ```
 
-`TraversableOnce#collectFirst`
+`TraversableOnce#collectFirst`  
+パターンにマッチした最初の要素を抜き出す
 
 +++
 
@@ -255,7 +256,8 @@ def tryStoringUser2(user: User): Try[Unit] =
   }
 ```
 
-`Try#recoverWith`
+`Try#recoverWith`  
+Tryの失敗時に、さらに失敗の可能性があるTryを実行する
 
 ---
 
