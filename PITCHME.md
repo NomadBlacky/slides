@@ -1,6 +1,8 @@
-# Readable Code in Scala
+## `Readable Code`<br/>`in Scala`
 
-## Scala関西Summit2018
+@size[0.5em](パターンマッチ・for式編)
+
+### `Scala関西Summit2018`
 
 門脇 拓巳 (@blac_k_ey)
 
@@ -8,7 +10,7 @@
 
 ## 自己紹介
 
-+ 門脇 拓巳 (かどわき たくみ)
++ 門脇 拓巳 (Takumi Kadowaki)
 + 所属: 株式会社セプテーニ・オリジナル
 + GitHub: [NomadBlacky](https://github.com/NomadBlacky)
 + Twitter: [@blac_k_ey](https://twitter.com/blac_k_ey)
@@ -17,20 +19,20 @@
 
 ## 発表内容について
 
-Scalaで読みやすいコードを書くためのTipsをご紹介します。
+@size[0.9em](Scalaで読みやすいコードを書くためのTipsをご紹介します。)
  
 + ある程度Scalaの基本文法に慣れてきた
 + Scalaらしいコードを書けているか不安な人
 
-…といった、初心者の方を対象としています。
+…といった、初級者の方を対象としています。
 
 ---
 
-## 「読みやすい」コードとはなんだろう?
+## 「読みやすいコード」<br/>とはなんだろう?
 
----
++++
 
-「読みにくい」コードから考える
+「読みにくいコード」から考える
 
 + ひと目で仕様を把握できない
 + 適切な機能・APIを使って実装されていない
@@ -40,7 +42,7 @@ Scalaで読みやすいコードを書くためのTipsをご紹介します。
 
 +++
 
-「読みやすい」コード
+対して、「読みやすいコード」とは
 
 + ひと目で仕様が分かる
 + 適切な機能・APIを使って実装されている
@@ -54,7 +56,7 @@ Scalaに限らず、読みやすいコードを書くためにできること
 
 + 関数(メソッド)を小さく保つ
 + 命名規則
-+ 適切な機能・APIを使う
++ 適切な言語機能・APIを使う
 + ネストを深くしない
 + ドキュメントを書く
 + 副作用を起こすところを局所化する
@@ -66,11 +68,11 @@ Scalaに限らず、読みやすいコードを書くためにできること
 
 今回は「Scala関西Summit」ということなので…
 
-+ 適切な機能・APIを使って実装されている
++ 適切な言語機能・APIを使う
 + シンプル
 
-特にこの2つに対し、Scalaの言語機能を有効に使うことで、  
-Scalaらしく、「読みやすい」コードを書けることを目指していきましょう。
+@size[0.8em](特にこの2つに対し、Scalaの言語機能を有効に使うことで、)  
+@size[0.8em](Scalaらしい「読みやすい」コードを書けることを目指していきましょう。)
 
 ---
 
@@ -78,7 +80,7 @@ Scalaらしく、「読みやすい」コードを書けることを目指して
 
 +++
 
-まず、以下の条件を満たす関数を実装することを考えます。
+以下の条件を満たす関数を実装することを考えます。
 
 ```scala
 case class User(name: Option[String], isActive: Boolean)
@@ -127,7 +129,7 @@ def extractUserNameWithTop10Chars(users: List[User]): List[String] = {
 }
 ```
 
-素直に実装してみる
+愚直に実装してみる
 
 +++
 
@@ -166,6 +168,10 @@ def extractUserNameWithTop10Chars03(users: List[User]): List[String] = {
 +++
 
 ```scala
+// List.scala
+final override def collect[B, That](pf: PartialFunction[A, B])
+  (implicit bf: CanBuildFrom[List[A], B, That]): That
+
 def extractUserNameWithTop10Chars04(users: List[User]): List[String] =
   users.collect {
     case User(Some(name), true) if 10 <= name.length => name.take(10)
@@ -174,6 +180,9 @@ def extractUserNameWithTop10Chars04(users: List[User]): List[String] =
 ```
 
 collectを使う
+
+パターンに一致した要素を変換し、  
+一致しなかったものは捨てる。
 
 +++
 
@@ -191,8 +200,8 @@ trait PartialFunction[-A, +B] extends (A => B)
 ```
 
 + 「部分関数」とも言われる
-+ 特定の引数に対してのみ結果を返す関数。
-+ 引数により値を返さない場合がある。
++ パターンにマッチする引数にのみ結果を返す関数
++ 引数により値を返さない場合がある(`MatchError`)
 
 +++
 
@@ -213,9 +222,50 @@ pf.lift(1) shouldBe None
 pf.lift(2) shouldBe Some("even")
 ```
 
+`PartialFunction` の一例
+
 +++
 
-### 標準ライブラリにおけるPartialFunctionの利用例
+```scala
+trait PartialFunction[-A, +B] extends (A => B)
+```
+
+`PartialFunction` は `Function1` を継承しています。  
+つまり、 `Function1` と同等に使うことができます。
+
++++
+
+```scala
+val strings = List(("a", 1), ("b", 2), ("c", 3)).map { tuple =>
+  tuple._1 * tuple._2
+}
+
+val strings2 = List(("a", 1), ("b", 2), ("c", 3)).map {
+  case (str, times) => str * times
+}
+```
+
+`List[(String, Int)]` の例
+
++++
+
+```scala
+def extractUserNameWithTop10Chars05(users: List[User]): List[String] = {
+  users.flatMap {
+    case User(Some(name), true) if 10 <= name.length => Some(name.take(10))
+    case User(Some(name), true)                      => Some(name)
+    case _                                           => None
+  }
+}
+```
+
+先程の例を改変
+
+`flatMap` に `PartialFunction` を渡す
+
++++
+
+### 標準ライブラリにおける `PartialFunction` の利用例
 
 +++
 
@@ -237,10 +287,8 @@ def isActiveUser2(username: String): Option[Boolean] =
 +++
 
 ```scala
-def storeUser(user: User): Try[Unit] = Try {
-  if (user.isActive) println("stored") else throw new IOException
-}
-def storeError(t: Throwable): Try[Unit] = Try(throw new IllegalStateException)
+def storeUser(user: User): Try[Unit] = ???
+def storeError(t: Throwable): Try[Unit] = ???
 
 def tryStoringUser(user: User): Try[Unit] = {
   storeUser(user) match {
@@ -257,30 +305,130 @@ def tryStoringUser2(user: User): Try[Unit] =
 ```
 
 `Try#recoverWith`  
-Tryの失敗時に、さらに失敗の可能性があるTryを実行する
+Tryに失敗したときに回復する際、   
+さらに失敗の可能性がある場合に使う
 
 ---
 
-## for式編
+## `for式` 編
+
++++
+
+```scala
+def namePair(userName1: String, userName2: String): Option[(String, String)] =
+  findUser("user1").flatMap { user1 =>
+    user1.name.flatMap { user1Name =>
+      findUser("user2").flatMap { user2 =>
+        user2.name.withFilter(userName2 => 10 <= userName2.length).map { user2Name =>
+          (user1Name, user2Name)
+        }
+      }
+    }
+  }
+
+def namePair2(userName1: String, userName2: String): Option[(String, String)] =
+  for {
+    user1     <- findUser("user1")
+    user1Name <- user1.name
+    user2     <- findUser("user2")
+    user2Name <- user2.name if 10 <= userName2.length
+  } yield (user1Name, user2Name)
+```
+
+上記2つのメソッドは同義
+
++++
+
+```scala
+// これを展開(desuger)するとどうなる?
+for {
+  i1 <- Try(10 / 2) if 0 < i1
+  i2 <- Try(10 / 0) if 1 < i2
+} yield i1 + i2
+```
+
+~頭の体操~  
+for式を紐解いてみよう
+
++++
+
+
+```scala
+for {
+  i1 <- Try(10 / 2).withFilter(i1 => 0 < i1)
+  i2 <- Try(10 / 0).withFilter(i2 => 1 < i2)
+} yield i1 + i2
+```
+
+`if`  → `withFilter`
+
++++
+
+
+```scala
+Try(10 / 2).withFilter(i1 => 0 < i1).flatMap { i1 =>
+  for {
+    i2 <- Try(10 / 0).withFilter(i2 => 1 < i2)
+  } yield i1 + i2
+}
+```
+
+外側のジェネレータ → `flatMap`
+
++++
+
+
+```scala
+Try(10 / 2).withFilter(i1 => 0 < i1).flatMap { i1 =>
+  Try(10 / 0).withFilter(i2 => 1 < i2).map { i2 =>
+    i1 + i2
+  }
+}
+```
+
+内側のジェネレータ → `map`
+
++++
+
+```scala
+// Before
+for {
+  i1 <- Try(10 / 2) if 0 < i1
+  i2 <- Try(10 / 0) if 1 < i2
+} yield i1 + i2
+
+// After
+Try(10 / 2).withFilter(i1 => 0 < i1).flatMap { i1 =>
+  Try(10 / 0).withFilter(i2 => 1 < i2).map { i2 =>
+    i1 + i2
+  }
+}
+```
+
+Scalaを使う上でfor式は可読性においても強力です。  
+ぜひ使いこなして行きましょう
+
++++
+
+### for式ベストプラクティス
 
 +++
 
 ```scala
 ```
 
-for式のおさらい
++++
+
+```scala
+```
 
 ---
 
-## その他Tips
+## 余談(時間あれば…)
 
 +++
 
-### 
-
-+++
-
-### コードスタイル
+### コードフォーマット編
 
 +++
 
@@ -296,6 +444,9 @@ for式のおさらい
 コードフォーマットは機械的にやってほしい…
 
 [scalafmt](https://scalameta.org/scalafmt/)をオススメします
+
+この前の時間にて、[@tanishiking](https://2018.scala-kansai.org/session/#谷口力斗%20@tanishiking) さんが  
+詳しく話されていると思いますので、ここでは割愛。
 
 +++
 

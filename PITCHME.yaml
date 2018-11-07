@@ -1,2 +1,3 @@
 highlight : monokai
+theme: moon
 theme-override: css/custom.css
