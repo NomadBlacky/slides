@@ -15,6 +15,16 @@
 + GitHub: [NomadBlacky](https://github.com/NomadBlacky)
 + Twitter: [@blac_k_ey](https://twitter.com/blac_k_ey)
 
++++
+
+![scala-book](images/zissen-scala.jpg)
+
+「実践Scala入門」発売中!  
+レビューを少しお手伝いさせていただきました🙇
+
+「実践」の名にふさわしい充実した内容!  
+必携の一冊です!
+
 ---
 
 ## 発表内容について
@@ -273,7 +283,7 @@ trait PartialFunction[-A, +B] extends (A => B)
 ```
 
 `PartialFunction` は `Function1` を継承しています。  
-つまり、 `Function1` と同等に使うことができます。
+つまり、 `Function1` とみなすことができます。
 
 +++
 
@@ -409,6 +419,28 @@ withFilter, flatMap, map が居なくなりましたが、
 
 +++
 
+```scala
+def namePair(userName1: String, userName2: String): Option[(String, String)] =
+  findUser("user1").flatMap { user1 =>
+    user1.name.flatMap { user1Name =>
+      findUser("user2").flatMap { user2 =>
+        user2.name.withFilter(userName2 => 10 <= userName2.length).map { user2Name =>
+          (user1Name, user2Name)
+        }
+      }
+    }
+  }
+def namePair2(userName1: String, userName2: String): Option[(String, String)] =
+  for {
+    user1     <- findUser("user1")
+    user1Name <- user1.name
+    user2     <- findUser("user2")
+    user2Name <- user2.name if 10 <= userName2.length
+  } yield (user1Name, user2Name)
+```
+
++++
+
 for式は
 
 + withFilter
@@ -539,43 +571,8 @@ private def extractGroupIdFromActiveMember(members: Seq[Member]) = // ...
 
 ### for式編まとめ
 
++ for式は `withFilter`,`flatMap`,`map`,`foreach`<br/>のシンタックスシュガー
 + 
-
----
-
-## 余談(時間あれば…)
-
-+++
-
-### コードフォーマット編
-
-+++
-
-[Effective Scala](http://twitter.github.io/effectivescala/index-ja.html#書式)
-
-> スタイルに本質的な良し悪しはないし、個人的な好みはほぼ人によって異なる。
-> しかし、同じ整形ルールを一貫して適用すれば、ほとんどの場合で可読性が高まる。
-
-コードレビューの観点からもフォーマットは統一しておきたい
-
-+++
-
-コードフォーマットは機械的にやってほしい…
-
-[scalafmt](https://scalameta.org/scalafmt/)をオススメします
-
-この前の時間にて、[@tanishiking](https://2018.scala-kansai.org/session/#谷口力斗%20@tanishiking) さんが  
-詳しく話されていると思いますので、詳細は割愛。
-
-+++
-
-(宣伝)
-
-sbtプロジェクトにscalafmtをコマンド一発で導入する
-
-[septeni-original/scalafmt-config](https://github.com/septeni-original/scalafmt-config)
-
-`curl -L https://git.io/vdiNA | bash`
 
 ---
 
@@ -591,16 +588,6 @@ https://github.com/NomadBlacky/scala_samples
 Scala関する様々なサンプルコードがあります。
 
 Scala学習の手助けとなれば幸いです。
-
-+++
-
-![scala-book](images/zissen-scala.jpg)
-
-「実践Scala入門」発売中!  
-レビューを少しお手伝いさせていただきました🙇
-
-「実践」の名にふさわしい充実した内容!  
-必携の一冊です!
 
 +++
 
