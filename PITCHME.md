@@ -19,12 +19,32 @@
 
 ## 発表内容について
 
-@size[0.9em](Scalaで読みやすいコードを書くためのTipsをご紹介します。)
- 
+@size[0.8em](Scalaで読みやすいコードを書くためのTipsをご紹介します。)
+
 + ある程度Scalaの基本文法に慣れてきた
 + Scalaらしいコードを書けているか不安な人
 
 …といった、初級者の方を対象としています。
+
+---
+
+## 謝辞
+
++++
+
+## `Readable Code`<br/>`in Scala`
+
+@size[0.5em](パターンマッチ・for式編)
+
+### `Scala関西Summit2018`
+
+門脇 拓巳 (@blac_k_ey)
+
++++
+
+「パターンマッチ・for式編」
+
+を加えさせていただきました
 
 ---
 
@@ -52,7 +72,7 @@
 
 +++
 
-Scalaに限らず、読みやすいコードを書くためにできること
+@size[0.8em](Scalaに限らず、読みやすいコードを書くためにできること)
 
 + 関数(メソッド)を小さく保つ
 + 命名規則
@@ -72,7 +92,8 @@ Scalaに限らず、読みやすいコードを書くためにできること
 + シンプル
 
 @size[0.8em](特にこの2つに対し、Scalaの言語機能を有効に使うことで、)  
-@size[0.8em](Scalaらしい「読みやすい」コードを書けることを目指していきましょう。)
+@size[0.8em](Scalaらしい「読みやすい」コードを書けることを)  
+@size[0.8em](目指していきましょう。)
 
 ---
 
@@ -80,17 +101,31 @@ Scalaに限らず、読みやすいコードを書くためにできること
 
 +++
 
-以下の条件を満たす関数を実装することを考えます。
+```scala
+anyObject match {
+  case 1 => "one"                      // 値のマッチング
+  case d: Double => d.toString         // 型のマッチング
+  case Some(x) => x.toString           // 構造のマッチング
+  case s: String if 5 <= s.length => s // パターンガード
+  case any => "Any"                    // 任意の値
+}
+```
+
+match式のおさらい
+
++++
+
+Q: 以下の条件を満たす関数を実装しましょう
 
 ```scala
 case class User(name: Option[String], isActive: Boolean)
 def extractUserNameWithTop10Chars(users: List[User]): List[String] = ???
 ```
 
-+ List[User]クラスに対して
-+ isActiveがtrueのものだけを抜き出し
++ `List[User]` に対して
++ `isActive` が `true` のものだけを抜き出し
 + 名前が10文字以上の場合は最初の10文字だけを抜き出し
-+ List[String]を返す
++ `List[String]` を返す
 
 +++
 
@@ -197,11 +232,18 @@ final override def collect[B, That](pf: PartialFunction[A, B])
 
 ```scala
 trait PartialFunction[-A, +B] extends (A => B)
+
+val pf: PartialFunction[Int, String] = {
+  case 0 => "zero"
+  case i if i % 2 == 0 => "even"
+}
 ```
 
++ 無名関数とパターンマッチを組み合わせたもの
 + 「部分関数」とも言われる
 + パターンにマッチする引数にのみ結果を返す関数
-+ 引数により値を返さない場合がある(`MatchError`)
++ 引数により値を返さない場合がある
+  + `apply` すると `MatchError` となる
 
 +++
 
@@ -245,13 +287,14 @@ val strings2 = List(("a", 1), ("b", 2), ("c", 3)).map {
 }
 ```
 
-`List[(String, Int)]` の例
+`List[(String, Int)]` の例  
+タプルの要素に名前を付けている
 
 +++
 
 ```scala
 def extractUserNameWithTop10Chars05(users: List[User]): List[String] = {
-  users.flatMap {
+  users.flatMap { // user => user match { /*...*/ }
     case User(Some(name), true) if 10 <= name.length => Some(name.take(10))
     case User(Some(name), true)                      => Some(name)
     case _                                           => None
@@ -290,6 +333,7 @@ def isActiveUser2(username: String): Option[Boolean] =
 def storeUser(user: User): Try[Unit] = ???
 def storeError(t: Throwable): Try[Unit] = ???
 
+// IOExceptionが発生したらエラーを記録したい
 def tryStoringUser(user: User): Try[Unit] = {
   storeUser(user) match {
     case Success(_) => Success(())
@@ -305,8 +349,16 @@ def tryStoringUser2(user: User): Try[Unit] =
 ```
 
 `Try#recoverWith`  
-Tryに失敗したときに回復する際、   
-さらに失敗の可能性がある場合に使う
+@size[0.8em](Tryに失敗したときに回復する際、 )  
+@size[0.8em](さらに失敗の可能性がある場合に使う)
+
++++
+
+### パターンマッチ編まとめ
+
++ パターンマッチは値・型・構造などを判断し、<br/>リーダブルな表現を提供する。
++ 無名関数とパターンマッチを組み合わせた<br/>`PartialFunction` がある。
++ 標準ライブラリの要所で<br/>`PartialFunction` が使われている。
 
 ---
 
@@ -325,7 +377,22 @@ def namePair(userName1: String, userName2: String): Option[(String, String)] =
       }
     }
   }
+```
 
+唐突ですが、  
+これを見て何をしているかわかりますでしょうか?
+
++++
+
+![hadouken](images/hadouken.jpg)
+
+↓↘→Ｐ
+
+@size[0.5em]([お借りしました](https://twitter.com/tepodon/status/674354630734680065))
+
++++
+
+```scala
 def namePair2(userName1: String, userName2: String): Option[(String, String)] =
   for {
     user1     <- findUser("user1")
@@ -335,7 +402,21 @@ def namePair2(userName1: String, userName2: String): Option[(String, String)] =
   } yield (user1Name, user2Name)
 ```
 
-上記2つのメソッドは同義
+for式を使う
+
+withFilter, flatMap, map が居なくなりましたが、  
+先程の例と同等のコードです。
+
++++
+
+for式は
+
++ withFilter
++ flatMap
++ map (`yield` あり)
++ foreach (`yield` なし)
+
+のシンタックスシュガー(糖衣構文)です。
 
 +++
 
@@ -352,7 +433,6 @@ for式を紐解いてみよう
 
 +++
 
-
 ```scala
 for {
   i1 <- Try(10 / 2).withFilter(i1 => 0 < i1)
@@ -360,10 +440,9 @@ for {
 } yield i1 + i2
 ```
 
-`if`  → `withFilter`
+パターンガード  → `withFilter`
 
 +++
-
 
 ```scala
 Try(10 / 2).withFilter(i1 => 0 < i1).flatMap { i1 =>
@@ -376,7 +455,6 @@ Try(10 / 2).withFilter(i1 => 0 < i1).flatMap { i1 =>
 外側のジェネレータ → `flatMap`
 
 +++
-
 
 ```scala
 Try(10 / 2).withFilter(i1 => 0 < i1).flatMap { i1 =>
@@ -410,17 +488,58 @@ Scalaを使う上でfor式は可読性においても強力です。
 
 +++
 
-### for式ベストプラクティス
+### `for式バッドプラクティス`
+
++++
+
+```scala
+def resolveActiveGroupNames: Try[Seq[String]] = {
+  for {
+    activeUsersGroupIds <- Try {
+      memberRepository.resolveAllMembers().collect {
+        case Member(_, _, isActive, Some(groupId)) if isActive => groupId
+      }
+    }
+    activeGroupNames <- Try {
+      groupRepository.resolveIn(activeUsersGroupIds.toSet)
+        .filter(_.isActive)
+        .map(_.name)
+    }
+  } yield activeGroupNames
+}
+```
+
+ジェネレータで色々やりすぎていて  
+for式が長くなってしまっている
+
++++
+
+```scala
+def resolveActiveGroupNames: Try[Seq[String]] = {
+  for {
+    members <- resolveAllMembers
+    groupIds = extractGroupIdFromActiveMember(members)
+    groups <- resolveGroupsIn(groupIds)
+    activeGroupNames = extractNameFromExistsGroup(groups)
+  } yield activeGroupNames
+}
+
+private def resolveAllMembers = Try(memberRepository.resolveAll())
+
+private def extractGroupIdFromActiveMember(members: Seq[Member]) = // ...
+```
+
+内部関数やprivateメソッドに切り出すことで、  
+メソッドを手順書のように読むことができる。
 
 +++
 
 ```scala
 ```
 
-+++
+### for式編まとめ
 
-```scala
-```
++ 
 
 ---
 
@@ -446,7 +565,7 @@ Scalaを使う上でfor式は可読性においても強力です。
 [scalafmt](https://scalameta.org/scalafmt/)をオススメします
 
 この前の時間にて、[@tanishiking](https://2018.scala-kansai.org/session/#谷口力斗%20@tanishiking) さんが  
-詳しく話されていると思いますので、ここでは割愛。
+詳しく話されていると思いますので、詳細は割愛。
 
 +++
 
@@ -466,9 +585,11 @@ sbtプロジェクトにscalafmtをコマンド一発で導入する
 
 今回紹介したコードは以下に置いてあります。
 
-[NomadBlacky/scala_samples](https://github.com/NomadBlacky/scala_samples)
+https://github.com/NomadBlacky/scala_samples
 
-今回の内容以外にも、Scala関する様々なサンプルコードがあります。  
+今回の内容以外にも、  
+Scala関する様々なサンプルコードがあります。
+
 Scala学習の手助けとなれば幸いです。
 
 +++
@@ -478,7 +599,20 @@ Scala学習の手助けとなれば幸いです。
 「実践Scala入門」発売中!  
 レビューを少しお手伝いさせていただきました🙇
 
-8章、9章はよりScalaらしく書くための手助けになります。
+「実践」の名にふさわしい充実した内容!  
+必携の一冊です!
+
++++
+
+![scala-book](images/septeni-original.jpg)
+
+@size[0.8em]([セプテーニ・オリジナルではエンジニアを募集しています!](http://www.septeni-holdings.co.jp/career/))
+
+@size[0.8em](「実践Scala入門」の著者3人(うち、アドバイザー1人))  
+@size[0.8em](が在籍する環境で一緒にScalaを書きませんか?)
+
+@size[0.8em](Scalaに書き慣れた方も、挑戦したい方も、)  
+@size[0.8em](興味がありましたらぜひお声がけください!)
 
 ---
 
@@ -486,10 +620,11 @@ Scala学習の手助けとなれば幸いです。
 
 「読みやすい」Scalaコードを書くために
 
-+ 関数を小さく保つ・書式を揃える、といった要素はScalaでも同様に役立つ
-+ Scalaの言語機能を理解しよう、使ってみよう
-  + パターンマッチ、for式は特に役立つ
-  + (implicit などに触れられなかったのでまたの機会に…)
-+ 適切なAPIを探そう、使おう
++ @size[0.7em](関数を小さく保つ・書式を揃える、といった要素はScalaでも同様に役立つ)
++ @size[0.7em](Scalaの言語機能を理解しよう、使ってみよう)
+  + @size[0.6em](可読性を高めるために様々な言語仕様が実装されている)
+  + @size[0.6em](パターンマッチ、for式は頻出するので抑えておこう)
+  + @size[0.6em]((implicit などに触れられなかったのでまたの機会に…))
++ @size[0.7em](適切なAPIを探そう、使おう)
 
 Scalaで実装する際の助けになれば幸いです🙇
