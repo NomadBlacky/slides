@@ -12,6 +12,7 @@
 
 + 門脇 拓巳 (Takumi Kadowaki)
 + 所属: 株式会社セプテーニ・オリジナル
+  + 広告運用管理ツールPYXISの開発に関わる
 + GitHub: [NomadBlacky](https://github.com/NomadBlacky)
 + Twitter: [@blac_k_ey](https://twitter.com/blac_k_ey)
 
@@ -24,6 +25,18 @@
 
 「実践」の名にふさわしい充実した内容!  
 必携の一冊です!
+
++++
+
+![scala-book](images/septeni-original.jpg)
+
+@size[0.8em]([セプテーニ・オリジナルではエンジニアを募集しています!](http://www.septeni-holdings.co.jp/career/))
+
+@size[0.8em](「実践Scala入門」の著者3人(うち、アドバイザー1人))  
+@size[0.8em](が在籍する環境で一緒にScalaを書きませんか?)
+
+@size[0.8em](Scalaに書き慣れた方も、挑戦したい方も、)  
+@size[0.8em](興味がありましたらぜひお声がけください!)
 
 ---
 
@@ -134,23 +147,23 @@ def extractUserNameWithTop10Chars(users: List[User]): List[String] = ???
 
 + `List[User]` に対して
 + `isActive` が `true` のものだけを抜き出し
-+ 名前が10文字以上の場合は最初の10文字だけを抜き出し
++ 名前が10文字以上の場合は最初の5文字だけを抜き出し
 + `List[String]` を返す
 
 +++
 
 ```scala
 val userList = List(
-  User(Some("user1"),                      isActive = true),
-  User(None,                               isActive = true),
-  User(Some("user3"),                      isActive = false),
-  User(Some("tooooooooo long name user4"), isActive = true),
-  User(Some("tooooooooo long name user5"), isActive = false),
-  User(None,                               isActive = false),
-  User(Some("user7"),                      isActive = true)
+  User(Some("user1"), isActive = true),
+  User(None, isActive = true),
+  User(Some("user3"), isActive = false),
+  User(Some("user444444444444"), isActive = true),
+  User(Some("user555555555555"), isActive = false),
+  User(None, isActive = false),
+  User(Some("user7"), isActive = true)
 )
 
-val expect = List("user1", "tooooooooo", "user7")
+val expect = List("user1", "user4", "user7")
 
 extractUserNameWithTop10Chars(userList) shouldBe expect
 ```
@@ -166,7 +179,7 @@ def extractUserNameWithTop10Chars(users: List[User]): List[String] = {
     .withFilter(u => u.name.isDefined)
     .map { user =>
       if (10 <= user.name.get.length) {
-        user.name.get.take(10)
+        user.name.get.take(5)
       } else {
         user.name.get
       }
@@ -185,7 +198,7 @@ def extractUserNameWithTop10Chars02(users: List[User]): List[String] = {
     .withFilter(u => u.name.isDefined)
     .map { user =>
       user match {
-        case User(Some(name), _) if 10 <= name.length => name.take(10)
+        case User(Some(name), _) if 10 <= name.length => name.take(5)
         case User(Some(name), _)                      => name
       }
     }
@@ -200,9 +213,9 @@ def extractUserNameWithTop10Chars02(users: List[User]): List[String] = {
 def extractUserNameWithTop10Chars03(users: List[User]): List[String] = {
   users.flatMap { user =>
     user match {
-      case User(Some(name), true) if 10 <= name.length => Some(name.take(10))
-      case User(Some(name), true)                      => Some(name)
-      case _                                           => None
+      case User(Some(name), true) if 10 <= name.length => List(name.take(5))
+      case User(Some(name), true)                      => List(name)
+      case _                                           => Nil
     }
   }
 }
@@ -219,7 +232,7 @@ final override def collect[B, That](pf: PartialFunction[A, B])
 
 def extractUserNameWithTop10Chars04(users: List[User]): List[String] =
   users.collect {
-    case User(Some(name), true) if 10 <= name.length => name.take(10)
+    case User(Some(name), true) if 10 <= name.length => name.take(5)
     case User(Some(name), true)                      => name
   }
 ```
@@ -305,9 +318,9 @@ val strings2 = List(("a", 1), ("b", 2), ("c", 3)).map {
 ```scala
 def extractUserNameWithTop10Chars05(users: List[User]): List[String] = {
   users.flatMap { // user => user match { /*...*/ }
-    case User(Some(name), true) if 10 <= name.length => Some(name.take(10))
-    case User(Some(name), true)                      => Some(name)
-    case _                                           => None
+    case User(Some(name), true) if 10 <= name.length => List(name.take(5))
+    case User(Some(name), true)                      => List(name)
+    case _                                           => Nil
   }
 }
 ```
@@ -453,7 +466,79 @@ for式は
 +++
 
 ```scala
-// これを展開(desuger)するとどうなる?
+for {
+  a <- List(1, 2, 3, 4, 5)
+} yield a * 2
+
+List(1, 2, 3, 4, 5).map(a => a * 2)
+```
+
+`map`の展開
+
++++
+
+```scala
+for {
+  a <- List(1, 2, 3, 4, 5)
+} yield a * 2
+
+List(1, 2, 3, 4, 5).map(a => a * 2)
+```
+
+`map`の展開
+
++++
+
+```scala
+for {
+  a <- List(1, 2, 3, 4, 5) if a < 3
+} yield a * 2
+
+List(1, 2, 3, 4, 5)
+  .withFilter(a => a < 3)
+  .map(a => a * 2)
+```
+
+`withFilter`の展開
+
++++
+
+```scala
+for {
+  a <- List(1, 2, 3) if a < 3
+  b <- List(4, 5, 6)
+} yield a * b
+
+List(1, 2, 3).withFilter(a => a < 3).flatMap { a =>
+  List(4, 5, 6).map { b =>
+    a * b
+  }
+}
+```
+
+`flatMap`の展開
+
++++
+
+```scala
+for {
+  a <- List(1, 2, 3) if a < 3
+  b <- List(4, 5, 6)
+} println(a * b)
+
+List(1, 2, 3).withFilter(a => a < 3).foreach { a =>
+  List(4, 5, 6).foreach { b =>
+    println(a * b)
+  }
+}
+```
+
+`foreach`の展開
+
++++
+
+```scala
+// これを展開(desugar)するとどうなる?
 for {
   i1 <- Try(10 / 2) if 0 < i1
   i2 <- Try(10 / 0) if 1 < i2
@@ -520,7 +605,45 @@ Scalaを使う上でfor式は可読性においても強力です。
 
 +++
 
-### `for式バッドプラクティス`
+```scala
+scala> for {
+     |   a <- List(1, 2, 3) if a < 3
+     |   b <- List(4, 5 ,6)
+     | } yield a * b //print<ここでTabを押す>
+
+scala.collection.immutable.List.apply[Int](1, 2, 3).withFilter(((a: Int) => a.<(3))).flatMap[Int, List[Int]](((a: Int) => scala.collection.immutable.List.apply[Int](4, 5, 6).map[Int, List[Int]](((b: Int) => a.*(b)))(scala.collection.immutable.List.canBuildFrom[Int])))(scala.collection.immutable.List.canBuildFrom[Int]) // : List[Int]
+```
+
+Scala REPLでdesugarする
+
++++
+
+### `本当にあった怖いfor式`
+
++++
+
+```scala
+for {
+  activeUsersGroupIds <- Try {
+    memberRepository.resolveAll().collect {
+      case Member(_, _, isActive, Some(groupId)) if isActive => groupId
+    }
+  }
+  activeGroupNames <- Try {
+    groupRepository.resolveIn(activeUsersGroupIds.toSet).collect {
+      case Group(_, name, isDeleted) if !isDeleted => name
+    }
+  }
+  // 100行近く続く …
+  すごい結果: Seq[String] = {
+    {
+      {
+        Seq(/* なにか */)
+      }
+    }
+  }
+} yield すごい結果
+```
 
 +++
 
@@ -569,6 +692,8 @@ private def extractGroupIdFromActiveMember(members: Seq[Member]) = // ...
 ```scala
 ```
 
++++
+
 ### for式編まとめ
 
 + for式は `withFilter`,`flatMap`,`map`,`foreach`<br/>のシンタックスシュガー
@@ -588,18 +713,6 @@ https://github.com/NomadBlacky/scala_samples
 Scala関する様々なサンプルコードがあります。
 
 Scala学習の手助けとなれば幸いです。
-
-+++
-
-![scala-book](images/septeni-original.jpg)
-
-@size[0.8em]([セプテーニ・オリジナルではエンジニアを募集しています!](http://www.septeni-holdings.co.jp/career/))
-
-@size[0.8em](「実践Scala入門」の著者3人(うち、アドバイザー1人))  
-@size[0.8em](が在籍する環境で一緒にScalaを書きませんか?)
-
-@size[0.8em](Scalaに書き慣れた方も、挑戦したい方も、)  
-@size[0.8em](興味がありましたらぜひお声がけください!)
 
 ---
 
