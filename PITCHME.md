@@ -26,18 +26,6 @@
 「実践」の名にふさわしい充実した内容!  
 必携の一冊です!
 
-+++
-
-![scala-book](images/septeni-original.jpg)
-
-@size[0.8em]([セプテーニ・オリジナルではエンジニアを募集しています!](http://www.septeni-holdings.co.jp/career/))
-
-@size[0.8em](「実践Scala入門」の著者3人(うち、アドバイザー1人))  
-@size[0.8em](が在籍する環境で一緒にScalaを書きませんか?)
-
-@size[0.8em](Scalaに書き慣れた方も、挑戦したい方も、)  
-@size[0.8em](興味がありましたらぜひお声がけください!)
-
 ---
 
 ## 発表内容について
@@ -67,7 +55,7 @@
 
 「パターンマッチ・for式編」
 
-を加えさせていただきました
+を加えさせていただきました🙇
 
 ---
 
@@ -379,7 +367,7 @@ def tryStoringUser2(user: User): Try[Unit] =
 
 ### パターンマッチ編まとめ
 
-+ パターンマッチは値・型・構造などを判断し、<br/>リーダブルな表現を提供する。
++ パターンマッチは値・型・構造などを判断し、<br/>リーダブルな分岐を提供する。
 + 無名関数とパターンマッチを組み合わせた<br/>`PartialFunction` がある。
 + 標準ライブラリの要所で<br/>`PartialFunction` が使われている。
 
@@ -452,6 +440,8 @@ def namePair2(userName1: String, userName2: String): Option[(String, String)] =
   } yield (user1Name, user2Name)
 ```
 
+@size[0.9em](タイプ量が少なくなり、ネストが平たくなっているのがわかります)
+
 +++
 
 for式は
@@ -465,15 +455,7 @@ for式は
 
 +++
 
-```scala
-for {
-  a <- List(1, 2, 3, 4, 5)
-} yield a * 2
-
-List(1, 2, 3, 4, 5).map(a => a * 2)
-```
-
-`map`の展開
+### 展開法則を理解しよう
 
 +++
 
@@ -538,7 +520,6 @@ List(1, 2, 3).withFilter(a => a < 3).foreach { a =>
 +++
 
 ```scala
-// これを展開(desugar)するとどうなる?
 for {
   i1 <- Try(10 / 2) if 0 < i1
   i2 <- Try(10 / 0) if 1 < i2
@@ -546,7 +527,7 @@ for {
 ```
 
 ~頭の体操~  
-for式を紐解いてみよう
+これを展開(desugar)するとどうなる?
 
 +++
 
@@ -611,7 +592,11 @@ scala> for {
      |   b <- List(4, 5 ,6)
      | } yield a * b //print<ここでTabを押す>
 
-scala.collection.immutable.List.apply[Int](1, 2, 3).withFilter(((a: Int) => a.<(3))).flatMap[Int, List[Int]](((a: Int) => scala.collection.immutable.List.apply[Int](4, 5, 6).map[Int, List[Int]](((b: Int) => a.*(b)))(scala.collection.immutable.List.canBuildFrom[Int])))(scala.collection.immutable.List.canBuildFrom[Int]) // : List[Int]
+scala.collection.immutable.List.apply[Int](1, 2, 3)
+.withFilter(((a: Int) => a.<(3)))
+.flatMap[Int, List[Int]](((a: Int) => scala.collection.immutable.List.apply[Int](4, 5, 6)
+.map[Int, List[Int]](((b: Int) => a.*(b)))(scala.collection.immutable.List.canBuildFrom[Int])))
+(scala.collection.immutable.List.canBuildFrom[Int]) // : List[Int]
 ```
 
 Scala REPLでdesugarする
@@ -690,14 +675,35 @@ private def extractGroupIdFromActiveMember(members: Seq[Member]) = // ...
 +++
 
 ```scala
+def resolveActiveGroupNames: Try[Seq[String]] = {
+  for {
+    groupIds <- resolveActiveGroupIds()
+    groupNames <- resolveExistsGroupNameIn(groupIds)
+  } yield groupNames
+}
+
+def resolveActiveGroupIds(): Try[Seq[Long]] = for {
+  members <- resolveAllMembers()
+  groupIds = extractGroupIdFromActiveMember(members)
+} yield groupIds
+
+def resolveExistsGroupNameIn(groupIds: Seq[Long]) = for {
+  groups <- resolveGroupsIn(groupIds)
+  activeGroupNames = extractNameFromExistsGroup(groups)
+} yield activeGroupNames
 ```
+
+複数のfor式に置き換える
 
 +++
 
-### for式編まとめ
+### `for式編まとめ`
 
 + for式は `withFilter`,`flatMap`,`map`,`foreach`<br/>のシンタックスシュガー
-+ 
++ ジェネレータが大きくなると可読性を残ってしまう
++ 大きくなってしまったときは
+  + 内部関数に処理を切り出す
+  + 複数のfor式に書き換える
 
 ---
 
@@ -714,6 +720,18 @@ Scala関する様々なサンプルコードがあります。
 
 Scala学習の手助けとなれば幸いです。
 
++++
+
+![scala-book](images/septeni-original.jpg)
+
+@size[0.8em]([セプテーニ・オリジナルではエンジニアを募集しています!](http://www.septeni-holdings.co.jp/career/))
+
+@size[0.8em](「実践Scala入門」の著者3人(うち、アドバイザー1人))  
+@size[0.8em](が在籍する環境で一緒にScalaを書きませんか?)
+
+@size[0.8em](Scalaに書き慣れた方も、挑戦したい方も、)  
+@size[0.8em](興味がありましたらぜひお声がけください!)
+
 ---
 
 ## まとめ
@@ -722,9 +740,8 @@ Scala学習の手助けとなれば幸いです。
 
 + @size[0.7em](関数を小さく保つ・書式を揃える、といった要素はScalaでも同様に役立つ)
 + @size[0.7em](Scalaの言語機能を理解しよう、使ってみよう)
-  + @size[0.6em](可読性を高めるために様々な言語仕様が実装されている)
-  + @size[0.6em](パターンマッチ、for式は頻出するので抑えておこう)
-  + @size[0.6em]((implicit などに触れられなかったのでまたの機会に…))
-+ @size[0.7em](適切なAPIを探そう、使おう)
-
-Scalaで実装する際の助けになれば幸いです🙇
+  + @size[0.6em](言語機能の理解が読みやすいコードを書くことに繋がる)
+  + @size[0.6em]((`implicit`などに触れられなかったのでまたの機会に…))
++ @size[0.7em](パターンマッチ、for式は頻出するので抑えておこう)
+  + @size[0.6em](パターンマッチでリーダブルな分岐を行おう)
+  + @size[0.6em](for式のジェネレータはシンプルに保とう)
