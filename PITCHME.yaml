@@ -1,3 +1,5 @@
 highlight : monokai
 theme: moon
 theme-override: css/custom.css
+logo : images/logo.png
+logo-position : bottom-right
